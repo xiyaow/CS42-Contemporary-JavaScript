@@ -1,4 +1,80 @@
-// TODO: comments code
+// HTTP OK status code
+const STATUS_OK = 200
+
+// interval to refresh comments at
+const COMMENTS_REFRESH_INTERVAL = 2000
+
+const commentForm = document.getElementsByTagName('form')[0]
+const commentList = document.getElementById('comment-list')
+
+commentForm.addEventListener('submit', event => {
+  event.preventDefault()
+
+  const nameInput = commentForm.querySelector('input[type="text"]')
+  const messageTextarea = commentForm.querySelector('textarea')
+
+  const name = nameInput.value
+  const message = messageTextarea.value
+
+  // ensure both name and comment exist
+  if (!name || !message) {
+    return
+  }
+
+  // add comment via AJAX
+  const request = new XMLHttpRequest()
+  request.addEventListener('load', event => {
+    if (request.status === STATUS_OK) {
+      addCommentToList(name, message)
+      nameInput.value = ''
+      messageTextarea.value = ''
+    }
+  })
+
+  request.open('POST', '/comments')
+  request.setRequestHeader('Content-type', 'application/json')
+  request.send(JSON.stringify({
+    name: name,
+    message: message,
+  }))
+})
+
+let lastResponse = null
+
+function refreshComments() {
+  // get comments via AJAX
+  const request = new XMLHttpRequest()
+  request.addEventListener('load', event => {
+    if (request.status === STATUS_OK) {
+      const comments = JSON.parse(request.responseText)
+      lastResponse = request.responseText
+
+      commentList.innerHTML = ''
+      comments.forEach(comment => {
+        addCommentToList(comment.name, comment.message)
+      })
+    }
+
+    // refetch comments periodically
+    setTimeout(refreshComments, COMMENTS_REFRESH_INTERVAL)
+  })
+
+  request.open('GET', '/comments')
+  request.send()
+}
+
+refreshComments()
+
+/* Adds a comment to the list of comments.
+ *
+ * Arguments:
+ * name -- who posted the comment
+ * message -- the message of the comment
+ */
+function addCommentToList(name, message) {
+  const commentLi = renderComment(name, message)
+  commentList.appendChild(commentLi)
+}
 
 /* Renders a comment with the given name and message to be listed in the
  * #comments div. */
