@@ -1,6 +1,17 @@
 /* Sets a random integer quantity in range [1, 20] for each flavor. */
 function setQuantities() {
-  // TODO
+  const metas = document.querySelectorAll(".flavor .meta")
+  
+  Array.from(metas).forEach(meta => {
+  	const newSpan = document.createElement("span")
+  	newSpan.classList.add("quantity")
+
+  	const theFirstChild = meta.firstChild
+  	meta.insertBefore(newSpan, theFirstChild)
+
+  	newSpan.innerHTML = Math.floor(Math.random() * 20) + 1
+  })
+
 }
 
 /* Extracts and returns an array of flavor objects based on data in the DOM. Each
@@ -13,37 +24,93 @@ function setQuantities() {
  * quantity: how many cups of the flavor are available
  */
 function extractFlavors() {
-  // TODO
+	const flavorElements = document.getElementsByClassName("flavor")
+	let flavors = []
+	let count = 0
+	Array.from(flavorElements).forEach(flavorElement => {
+		const flavor ={
+			element: flavorElement,
+			name: document.querySelectorAll(".description h2")[count].innerHTML,
+			description: document.querySelectorAll(".description p")[count].innerHTML,
+			price: Number(document.querySelectorAll(".price")[count].innerHTML.substring(1)),
+			quantity: document.querySelectorAll(".quantity")[count].innerHTML
+		}
+		count++
+		flavors.push(flavor)
+	})
+	return flavors
 }
 
 /* Calculates and returns the average price of the given set of flavors. The
  * average should be rounded to two decimal places. */
 function calculateAveragePrice(flavors) {
-  // TODO
+	let totalPrice = 0
+	Array.from(flavors).forEach(flavor => {
+		totalPrice += flavor.price
+	})
+
+	let average = totalPrice / flavors.length
+	return average.toFixed(2)
+
 }
 
 /* Finds flavors that have prices below the given threshold. Returns an array
  * of strings, each of the form "[flavor] costs $[price]". There should be
  * one string for each cheap flavor. */
 function findCheapFlavors(flavors, threshold) {
-  // TODO
+
+  const cheapFlavors = flavors.filter(flavor => flavor.price < threshold)
+  const reformat = cheapFlavors.map(flavor =>
+  	flavor.name + " costs $" + flavor.price
+  	)
+  return reformat
 }
 
 /* Populates the select dropdown with options. There should be one option tag
  * for each of the given flavors. */
 function populateOptions(flavors) {
-  // TODO
+	const sample= document.querySelector('select[name="flavor"]')
+	sample.remove(0)
+
+  Array.from(flavors).forEach(flavor => {
+  	const addFlavor = document.createElement("option")
+  	addFlavor.value = flavor.name
+  	addFlavor.innerHTML = flavor.name
+  	const list = document.querySelector('select[name="flavor"]')
+  	list.appendChild(addFlavor)
+  })
+
 }
 
 /* Processes orders for the given set of flavors. When a valid order is made,
  * decrements the quantity of the associated flavor. */
-function processOrders(flavors) {
-  // TODO
+function processOrders(flavors) {	
+	const submit = document.querySelector('form')
+	submit.addEventListener('submit', event => {
+		const amount = parseInt(document.querySelector('input[name="amount"]').value)
+		const selectedFlavor = document.querySelector('select[name="flavor"]').value
+	  	
+	  	Array.from(flavors).forEach(flavor => {
+	  		if(selectedFlavor === flavor.name){
+	  			if(amount > flavor.quantity || !Number.isInteger(amount)|| amount <= 0){
+	  				return
+	  			}else{
+	  				flavor.quantity -= amount
+	  				flavor.element.querySelector(".quantity").innerHTML -= amount
+	  			}
+	  		}
+	  })
+  	event.preventDefault()
+  })
 }
 
 /* Highlights flavors when clicked to make a simple favoriting system. */
 function highlightFlavors(flavors) {
-  // TODO
+	Array.from(flavors).forEach(flavor => {
+		flavor.element.addEventListener('click', event => {
+			flavor.element.classList.toggle("highlighted")
+		})
+	})
 }
 
 
