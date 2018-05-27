@@ -3,6 +3,9 @@ const ENTER_KEY_CODE = 13
 const taskInput = document.getElementById('task')
 const taskList = document.getElementById('task-list')
 
+if(localStorage.tasks){
+  taskList.innerHTML = localStorage.tasks;
+}
 taskInput.addEventListener("keydown", event => {
   if (event.keyCode === ENTER_KEY_CODE) {
     event.preventDefault()
@@ -18,13 +21,11 @@ taskInput.addEventListener("keydown", event => {
  */
 function addTaskToList() {
   if (taskInput.value)  {
-    const li = document.createElement('li')
-    li.textContent = taskInput.value
-    li.innerHTML += " <span class=\"delete\"></span> <span class=\"check\"></span>"
+    const li = renderTaskTemplate(taskInput.value);
 
-    addTaskListeners(li)
     taskInput.value = ""
     taskList.appendChild(li)
+    localStorage.tasks = taskList.innerHTML;
   }
 }
 
@@ -33,14 +34,50 @@ function addTaskToList() {
  * Arguments:
  * taskLi -- the HTMLElement li tag
  */
-function addTaskListeners(li) {
-  const checkbox = li.querySelector('.check')
-  checkbox.addEventListener('click', () => {
-    li.classList.toggle('checked')
-  })
+taskList.addEventListener('click', event => {
+  let target = event.target;
+  while(target != taskList && !target.classList.contains('check') && !target.classList.contains('delete')){
+    target = target.parentNode;
+  }
 
-  const deleteButton = li.querySelector('.delete')
-  deleteButton.addEventListener('click', () => {
+  if(target == taskList){
+    return;
+  }
+
+  const li = target.parentNode;
+  if(target.classList.contains('check')){
+    li.classList.toggle('checked')
+    localStorage.tasks = taskList.innerHTML;
+  }else{
     li.parentNode.removeChild(li)
+    localStorage.tasks = taskList.innerHTML;
+  }
+})
+
+function renderTaskTemplate(task){
+  return tag('li', {}, [
+    task,
+    tag('span', {class: 'delete'}, []),
+    tag('span', {class: 'check'}, [])
+    ])
+}
+
+function tag(type, attr, contents){
+  const element = document.createElement(type)
+  for(const key in attr){
+    element.setAttribute(key, attr[key]);
+  }
+
+  if(!(contents instanceof Array)){
+    contents = [contents];
+  }
+
+  contents.forEach(content => {
+    if(content instanceof HTMLElement){
+      element.appendChild(content);
+    }else{
+      element.appendChild(document.createTextNode(content));
+    }
   })
+  return element;
 }
